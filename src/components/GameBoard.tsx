@@ -51,10 +51,12 @@ import GameStatus from "./GameStatus"
 import Lobby from "./Lobby"
 import GameOver from "./GameOver"
 import { RuleHelper } from "./RuleHelper"
+import ActionIndicator from "./ActionIndicator"
 
 const GameBoard: React.FC = () => {
   const [state, send] = useMachine(cardGameMachine)
   const { context } = state
+  const [autoPlayEnabled, setAutoPlayEnabled] = React.useState(false)
 
   // Timer effect
   useEffect(() => {
@@ -68,16 +70,16 @@ const GameBoard: React.FC = () => {
     }
   }, [state, context.gameTimer, send])
 
-  // Auto-play effect
+  // Auto-play effect (only when enabled)
   useEffect(() => {
-    if (state.matches("playerTurn")) {
+    if (state.matches("playerTurn") && autoPlayEnabled) {
       const currentPlayer = context.players[context.currentPlayerIndex]
       const topDiscardCard = context.discardPile[context.discardPile.length - 1]
 
       if (currentPlayer && topDiscardCard) {
         const validCards = getValidCards(currentPlayer.hand, topDiscardCard)
 
-        // Auto-play if only one valid card
+        // Auto-play if only one valid card (reasonable timing for human play)
         if (validCards.length === 1 && context.selectedCards.length === 0) {
           setTimeout(() => {
             send({
@@ -85,18 +87,17 @@ const GameBoard: React.FC = () => {
               card: validCards[0],
               playerId: currentPlayer.id,
             })
-          }, 1000)
+          }, 3000) // 3 seconds - enough time to see the situation but not too slow
         }
-        // Auto-advance if no valid cards (player cannot move)
+        // Auto-advance if no valid cards (reasonable timing for human play)
         else if (validCards.length === 0) {
           setTimeout(() => {
-            // This will trigger the waitingForTurn state which handles turn advancement
             send({ type: "SKIP_TURN" })
-          }, 1500) // Slightly longer delay to show the "no moves" state
+          }, 4000) // 4 seconds - time to verify no valid moves without being tedious
         }
       }
     }
-  }, [state, context, send])
+  }, [state, context, send, autoPlayEnabled])
 
   // Keyboard event handler for SPACE key
   useEffect(() => {
@@ -182,13 +183,35 @@ const GameBoard: React.FC = () => {
   return (
     <div className="flex-1 flex flex-col p-5 max-w-7xl mx-auto w-full">
       <div className="flex justify-between items-center bg-white/95 px-6 py-4 rounded-xl mb-5 shadow-lg">
-        <GameTimer timeRemaining={context.gameTimer} />
+        <div className="flex items-center gap-6">
+          <GameTimer timeRemaining={context.gameTimer} />
+
+          <div className="flex flex-col items-center gap-2">
+            <button
+              onClick={() => setAutoPlayEnabled(!autoPlayEnabled)}
+              className={`px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 ${
+                autoPlayEnabled
+                  ? "bg-green-500 text-white hover:bg-green-600"
+                  : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+              }`}
+            >
+              Auto-Play: {autoPlayEnabled ? "ON" : "OFF"}
+            </button>
+            <div className="text-xs text-gray-600 text-center max-w-40">
+              {autoPlayEnabled
+                ? "Game will auto-play single cards and skip turns"
+                : "Manual play - you control all moves"}
+            </div>
+          </div>
+        </div>
+
         <GameStatus
           currentState={state.value as string}
           currentPlayer={context.players[context.currentPlayerIndex]}
           playersCount={context.players.length}
           noValidMoves={currentPlayerNoValidMoves}
         />
+
         {noValidMoves && state.matches("playerTurn") && (
           <button
             onClick={() => send({ type: "END_GAME" })}
@@ -197,6 +220,15 @@ const GameBoard: React.FC = () => {
             End Game
           </button>
         )}
+      </div>
+
+      {/* Action Indicator - Always visible to show what's happening */}
+      <div className="mb-5">
+        <ActionIndicator
+          context={context}
+          currentState={state.value as string}
+          autoPlayEnabled={autoPlayEnabled}
+        />
       </div>
 
       <div className="flex-1 flex flex-col gap-5">

@@ -130,10 +130,6 @@ npm run build
 # The dist/ folder contains the production build
 ```
 
-## 📝 License
-
-This project is part of a frontend engineering challenge demonstrating advanced React and state management concepts.
-
 ---
 
 **Built with ❤️ using modern web technologies**

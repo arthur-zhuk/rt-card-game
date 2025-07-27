@@ -21,11 +21,6 @@ const GameStatus: React.FC<GameStatusProps> = ({
       case "gameStarting":
         return "Game starting... Dealing cards"
       case "playerTurn":
-        if (noValidMoves) {
-          return currentPlayer
-            ? `${currentPlayer.name} has no valid moves - advancing...`
-            : "No valid moves - advancing..."
-        }
         return currentPlayer ? `${currentPlayer.name}'s turn` : "Player turn"
       case "waitingForTurn":
         return "Processing turn..."
