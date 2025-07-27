@@ -119,9 +119,18 @@ export const canPlayCards = (
   if (cards.length === 0) return false
   if (cards.length === 1) return canPlayCard(cards[0], topDiscardCard)
 
-  // For multiple cards, check two scenarios:
+  // For multiple cards, check three scenarios:
 
-  // 1. All cards have the same value (e.g., multiple 5s on a 5)
+  // 1. All cards are individually valid (e.g., 3s and 4s on a 3)
+  const allIndividuallyValid = cards.every((card) =>
+    canPlayCard(card, topDiscardCard)
+  )
+
+  if (allIndividuallyValid) {
+    return true
+  }
+
+  // 2. All cards have the same value (e.g., multiple 5s on a 5)
   const firstCardValue = cards[0].value
   const allSameValue = cards.every((card) => card.value === firstCardValue)
 
@@ -130,7 +139,7 @@ export const canPlayCards = (
     return canPlayCard(cards[0], topDiscardCard)
   }
 
-  // 2. Cards sum to the discard pile value (e.g., 2+3=5 on a 5)
+  // 3. Cards sum to the discard pile value (e.g., 2+3=5 on a 5)
   const cardsSum = cards.reduce(
     (sum, card) => sum + getCardNumericValue(card.value),
     0
