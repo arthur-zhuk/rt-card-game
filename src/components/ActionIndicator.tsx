@@ -5,13 +5,11 @@ import { getValidCards } from "../utils/cardUtils"
 interface ActionIndicatorProps {
   context: GameContext
   currentState: string
-  autoPlayEnabled: boolean
 }
 
 const ActionIndicator: React.FC<ActionIndicatorProps> = ({
   context,
   currentState,
-  autoPlayEnabled,
 }) => {
   const getCurrentAction = () => {
     if (currentState === "lobby") {
@@ -91,45 +89,22 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
         }
       }
 
-      // Auto-play scenarios (only when auto-play is enabled)
-      if (autoPlayEnabled) {
-        if (validCards.length === 1) {
-          return {
-            type: "auto-play",
-            message: `Auto-playing ${currentPlayer.name}'s only valid card in 3 seconds...`,
-            icon: "🤖",
-            color: "bg-orange-100 text-orange-800 border-orange-200",
-          }
-        }
-
-        if (validCards.length === 0) {
-          return {
-            type: "auto-skip",
-            message: `${currentPlayer.name} has no valid moves - skipping turn in 4 seconds...`,
-            icon: "⏭️",
-            color: "bg-red-100 text-red-800 border-red-200",
-          }
-        }
-      }
-
-      // Manual play scenarios
-      if (validCards.length === 0) {
-        return {
-          type: "no-moves",
-          message: `${currentPlayer.name} has no valid moves - waiting for manual action`,
-          icon: "🚫",
-          color: "bg-red-100 text-red-800 border-red-200",
-        }
-      }
-
+      // Always auto-play single cards and no-move scenarios
       if (validCards.length === 1) {
         return {
-          type: "single-card",
-          message: autoPlayEnabled
-            ? `${currentPlayer.name} has 1 valid card - will auto-play soon`
-            : `${currentPlayer.name} has 1 valid card - click to play or enable auto-play`,
-          icon: "🎴",
-          color: "bg-green-100 text-green-800 border-green-200",
+          type: "auto-play",
+          message: `Auto-playing ${currentPlayer.name}'s only valid card in 1.5 seconds...`,
+          icon: "🤖",
+          color: "bg-orange-100 text-orange-800 border-orange-200",
+        }
+      }
+
+      if (validCards.length === 0) {
+        return {
+          type: "auto-skip",
+          message: `${currentPlayer.name} has no valid moves - skipping turn in 2 seconds...`,
+          icon: "⏭️",
+          color: "bg-red-100 text-red-800 border-red-200",
         }
       }
 

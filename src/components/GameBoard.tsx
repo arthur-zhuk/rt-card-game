@@ -56,7 +56,6 @@ import ActionIndicator from "./ActionIndicator"
 const GameBoard: React.FC = () => {
   const [state, send] = useMachine(cardGameMachine)
   const { context } = state
-  const [autoPlayEnabled, setAutoPlayEnabled] = React.useState(false)
   const autoPlayTimerRef = React.useRef<number | null>(null)
 
   // Timer effect
@@ -71,7 +70,7 @@ const GameBoard: React.FC = () => {
     }
   }, [state, context.gameTimer, send])
 
-  // Auto-play effect (only when enabled) with proper cleanup
+  // Auto-play effect - always auto-play single cards and no-move scenarios
   useEffect(() => {
     // Clear any existing timer first
     if (autoPlayTimerRef.current) {
@@ -79,7 +78,7 @@ const GameBoard: React.FC = () => {
       autoPlayTimerRef.current = null
     }
 
-    if (state.matches("playerTurn") && autoPlayEnabled) {
+    if (state.matches("playerTurn")) {
       const currentPlayer = context.players[context.currentPlayerIndex]
       const topDiscardCard = context.discardPile[context.discardPile.length - 1]
 
@@ -90,7 +89,7 @@ const GameBoard: React.FC = () => {
       ) {
         const validCards = getValidCards(currentPlayer.hand, topDiscardCard)
 
-        // Auto-play if only one valid card (reasonable timing for human play)
+        // Always auto-play if only one valid card (no choice needed)
         if (validCards.length === 1) {
           autoPlayTimerRef.current = setTimeout(() => {
             send({
@@ -99,15 +98,16 @@ const GameBoard: React.FC = () => {
               playerId: currentPlayer.id,
             })
             autoPlayTimerRef.current = null
-          }, 3000) // 3 seconds - enough time to see the situation but not too slow
+          }, 1500) // Faster timing since no manual decision needed
         }
-        // Auto-advance if no valid cards (reasonable timing for human play)
+        // Always auto-advance if no valid cards (no choice needed)
         else if (validCards.length === 0) {
           autoPlayTimerRef.current = setTimeout(() => {
             send({ type: "SKIP_TURN" })
             autoPlayTimerRef.current = null
-          }, 4000) // 4 seconds - time to verify no valid moves without being tedious
+          }, 2000) // Faster timing since no manual decision needed
         }
+        // Multiple valid cards = manual play required (no auto-play)
       }
     }
 
@@ -118,7 +118,7 @@ const GameBoard: React.FC = () => {
         autoPlayTimerRef.current = null
       }
     }
-  }, [state, context, autoPlayEnabled, send])
+  }, [state, context, send])
 
   // Keyboard event handler for SPACE key
   useEffect(() => {
@@ -208,20 +208,11 @@ const GameBoard: React.FC = () => {
           <GameTimer timeRemaining={context.gameTimer} />
 
           <div className="flex flex-col items-center gap-2">
-            <button
-              onClick={() => setAutoPlayEnabled(!autoPlayEnabled)}
-              className={`px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 ${
-                autoPlayEnabled
-                  ? "bg-green-500 text-white hover:bg-green-600"
-                  : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-              }`}
-            >
-              Auto-Play: {autoPlayEnabled ? "ON" : "OFF"}
-            </button>
-            <div className="text-xs text-gray-600 text-center max-w-40">
-              {autoPlayEnabled
-                ? "Game will auto-play single cards and skip turns"
-                : "Manual play - you control all moves"}
+            <div className="px-4 py-2 rounded-lg font-bold text-sm bg-blue-100 text-blue-800 border-2 border-blue-200">
+              Smart Auto-Play: ON
+            </div>
+            <div className="text-xs text-gray-600 text-center max-w-48">
+              Single cards auto-play • Multiple cards require manual selection
             </div>
           </div>
         </div>
@@ -248,7 +239,6 @@ const GameBoard: React.FC = () => {
         <ActionIndicator
           context={context}
           currentState={state.value as string}
-          autoPlayEnabled={autoPlayEnabled}
         />
       </div>
 
