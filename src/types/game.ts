@@ -35,6 +35,15 @@ export interface PlayerScore {
   handCards: Card[]
 }
 
+export interface AutoPlayNotification {
+  id: string
+  playerId: string
+  playerName: string
+  card: Card | null // null for auto-skip
+  timestamp: Date
+  type: "auto-play" | "auto-skip"
+}
+
 export interface GameContext {
   players: Player[]
   currentPlayerIndex: number
@@ -46,6 +55,7 @@ export interface GameContext {
   roundStartTime: Date | null
   finalScores: PlayerScore[]
   winner: PlayerScore | null
+  autoPlayNotifications: AutoPlayNotification[]
 }
 
 export type GameEvent =

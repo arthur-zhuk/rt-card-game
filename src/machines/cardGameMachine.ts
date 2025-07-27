@@ -40,6 +40,7 @@ const initialContext: GameContext = {
   roundStartTime: null,
   finalScores: [],
   winner: null,
+  autoPlayNotifications: [],
 }
 
 export const cardGameMachine = createMachine({
@@ -114,6 +115,29 @@ export const cardGameMachine = createMachine({
         },
         SKIP_TURN: {
           target: "waitingForTurn",
+          actions: assign(({ context }) => {
+            const currentPlayer = context.players[context.currentPlayerIndex]
+
+            // Add auto-skip notification
+            const notification = {
+              id: uuidv4(),
+              playerId: currentPlayer.id,
+              playerName: currentPlayer.name,
+              card: null, // No card for skip
+              timestamp: new Date(),
+              type: "auto-skip" as const,
+            }
+
+            // Keep only the last 10 notifications to prevent memory bloat
+            const updatedNotifications = [
+              ...context.autoPlayNotifications,
+              notification,
+            ].slice(-10)
+
+            return {
+              autoPlayNotifications: updatedNotifications,
+            }
+          }),
         },
         CARD_SELECTED: {
           actions: assign({
@@ -210,10 +234,27 @@ export const cardGameMachine = createMachine({
               isCurrentPlayer: false,
             }))
 
+            // Add auto-play notification
+            const notification = {
+              id: uuidv4(),
+              playerId: currentPlayer.id,
+              playerName: currentPlayer.name,
+              card: event.card,
+              timestamp: new Date(),
+              type: "auto-play" as const,
+            }
+
+            // Keep only the last 10 notifications to prevent memory bloat
+            const updatedNotifications = [
+              ...context.autoPlayNotifications,
+              notification,
+            ].slice(-10)
+
             return {
               players: updatedPlayers,
               discardPile: newDiscardPile,
               selectedCards: [],
+              autoPlayNotifications: updatedNotifications,
             }
           }),
           guard: ({ context, event }) => {

@@ -52,11 +52,11 @@ import Lobby from "./Lobby"
 import GameOver from "./GameOver"
 import { RuleHelper } from "./RuleHelper"
 import ActionIndicator from "./ActionIndicator"
+import AutoPlayNotifications from "./AutoPlayNotifications"
 
 const GameBoard: React.FC = () => {
   const [state, send] = useMachine(cardGameMachine)
   const { context } = state
-  const autoPlayTimerRef = React.useRef<number | null>(null)
 
   // Timer effect
   useEffect(() => {
@@ -70,14 +70,8 @@ const GameBoard: React.FC = () => {
     }
   }, [state, context.gameTimer, send])
 
-  // Auto-play effect - always auto-play single cards and no-move scenarios
+  // Instant auto-play effect - immediately play single cards and skip no-move scenarios
   useEffect(() => {
-    // Clear any existing timer first
-    if (autoPlayTimerRef.current) {
-      clearTimeout(autoPlayTimerRef.current)
-      autoPlayTimerRef.current = null
-    }
-
     // Only run auto-play logic during player turns with no selected cards
     if (state.matches("playerTurn") && context.selectedCards.length === 0) {
       const currentPlayer = context.players[context.currentPlayerIndex]
@@ -86,38 +80,30 @@ const GameBoard: React.FC = () => {
       if (currentPlayer && topDiscardCard) {
         const validCards = getValidCards(currentPlayer.hand, topDiscardCard)
 
-        // Always auto-play if only one valid card (no choice needed)
+        // Instantly auto-play if only one valid card (no choice needed)
         if (validCards.length === 1) {
-          autoPlayTimerRef.current = setTimeout(() => {
+          // Use setTimeout with 0ms to avoid state update conflicts
+          setTimeout(() => {
             send({
               type: "AUTO_PLAY",
               card: validCards[0],
               playerId: currentPlayer.id,
             })
-            autoPlayTimerRef.current = null
-          }, 1500) // Faster timing since no manual decision needed
+          }, 0)
         }
-        // Always auto-advance if no valid cards (no choice needed)
+        // Instantly auto-skip if no valid cards (no choice needed)
         else if (validCards.length === 0) {
-          autoPlayTimerRef.current = setTimeout(() => {
+          // Use setTimeout with 0ms to avoid state update conflicts
+          setTimeout(() => {
             send({ type: "SKIP_TURN" })
-            autoPlayTimerRef.current = null
-          }, 2000) // Faster timing since no manual decision needed
+          }, 0)
         }
         // Multiple valid cards = manual play required (no auto-play)
       }
     }
-
-    // Cleanup function to prevent overlapping timers
-    return () => {
-      if (autoPlayTimerRef.current) {
-        clearTimeout(autoPlayTimerRef.current)
-        autoPlayTimerRef.current = null
-      }
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    // Only trigger when turn state changes, not on timer ticks
+    // Only trigger when turn state changes, not on every context update
     state.value,
     context.currentPlayerIndex,
     context.selectedCards.length,
@@ -214,10 +200,11 @@ const GameBoard: React.FC = () => {
 
           <div className="flex flex-col items-center gap-2">
             <div className="px-4 py-2 rounded-lg font-bold text-sm bg-blue-100 text-blue-800 border-2 border-blue-200">
-              Smart Auto-Play: ON
+              Instant Auto-Play: ON
             </div>
             <div className="text-xs text-gray-600 text-center max-w-48">
-              Single cards auto-play • Multiple cards require manual selection
+              Single cards play instantly • Multiple cards require manual
+              selection
             </div>
           </div>
         </div>
@@ -297,6 +284,9 @@ const GameBoard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Auto-play notifications - floating on top right */}
+      <AutoPlayNotifications notifications={context.autoPlayNotifications} />
     </div>
   )
 }

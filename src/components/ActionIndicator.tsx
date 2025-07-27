@@ -89,11 +89,11 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
         }
       }
 
-      // Always auto-play single cards and no-move scenarios
+      // Single cards and no-move scenarios are handled instantly
       if (validCards.length === 1) {
         return {
           type: "auto-play",
-          message: `Auto-playing ${currentPlayer.name}'s only valid card in 1.5 seconds...`,
+          message: `Auto-playing ${currentPlayer.name}'s only valid card...`,
           icon: "🤖",
           color: "bg-orange-100 text-orange-800 border-orange-200",
         }
@@ -102,7 +102,7 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
       if (validCards.length === 0) {
         return {
           type: "auto-skip",
-          message: `${currentPlayer.name} has no valid moves - skipping turn in 2 seconds...`,
+          message: `${currentPlayer.name} has no valid moves - skipping turn...`,
           icon: "⏭️",
           color: "bg-red-100 text-red-800 border-red-200",
         }
