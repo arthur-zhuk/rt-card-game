@@ -216,6 +216,16 @@ export const cardGameMachine = createMachine({
               selectedCards: [],
             }
           }),
+          guard: ({ context, event }) => {
+            const currentPlayer = context.players[context.currentPlayerIndex]
+            const topDiscardCard =
+              context.discardPile[context.discardPile.length - 1]
+
+            return (
+              currentPlayer.id === event.playerId &&
+              canPlayCards([event.card], topDiscardCard)
+            )
+          },
         },
         TIMER_TICK: [
           {
