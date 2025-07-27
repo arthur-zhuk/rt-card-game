@@ -78,15 +78,12 @@ const GameBoard: React.FC = () => {
       autoPlayTimerRef.current = null
     }
 
-    if (state.matches("playerTurn")) {
+    // Only run auto-play logic during player turns with no selected cards
+    if (state.matches("playerTurn") && context.selectedCards.length === 0) {
       const currentPlayer = context.players[context.currentPlayerIndex]
       const topDiscardCard = context.discardPile[context.discardPile.length - 1]
 
-      if (
-        currentPlayer &&
-        topDiscardCard &&
-        context.selectedCards.length === 0
-      ) {
+      if (currentPlayer && topDiscardCard) {
         const validCards = getValidCards(currentPlayer.hand, topDiscardCard)
 
         // Always auto-play if only one valid card (no choice needed)
@@ -118,7 +115,15 @@ const GameBoard: React.FC = () => {
         autoPlayTimerRef.current = null
       }
     }
-  }, [state, context, send])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    // Only trigger when turn state changes, not on timer ticks
+    state.value,
+    context.currentPlayerIndex,
+    context.selectedCards.length,
+    context.players.length,
+    context.discardPile.length,
+  ])
 
   // Keyboard event handler for SPACE key
   useEffect(() => {
