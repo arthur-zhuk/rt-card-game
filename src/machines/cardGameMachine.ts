@@ -226,13 +226,6 @@ export const cardGameMachine = createMachine({
             }),
           },
           {
-            target: "gameEnding",
-            guard: ({ context }) => !hasAnyValidMoves(context),
-            actions: assign({
-              gameTimer: ({ event }) => event.remainingTime,
-            }),
-          },
-          {
             actions: assign({
               gameTimer: ({ event }) => event.remainingTime,
             }),

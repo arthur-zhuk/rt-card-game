@@ -42,10 +42,14 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
     }
 
     if (currentState === "gameEnding") {
+      // Check if game ended due to time or no valid moves
+      const endedDueToTime = context.gameTimer <= 0
       return {
         type: "ending",
-        message: "Time's up! Calculating final scores...",
-        icon: "🏁",
+        message: endedDueToTime
+          ? "Time's up! Calculating final scores..."
+          : "No more valid moves! Calculating final scores...",
+        icon: endedDueToTime ? "⏰" : "🏁",
         color: "bg-purple-100 text-purple-800 border-purple-200",
       }
     }
@@ -79,7 +83,9 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
       if (hasSelectedCards) {
         return {
           type: "selection",
-          message: `${context.selectedCards.length} card${context.selectedCards.length > 1 ? 's' : ''} selected - Press SPACE or click Play button`,
+          message: `${context.selectedCards.length} card${
+            context.selectedCards.length > 1 ? "s" : ""
+          } selected - Press SPACE or click Play button`,
           icon: "🎯",
           color: "bg-blue-100 text-blue-800 border-blue-200",
         }
@@ -119,7 +125,7 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
       if (validCards.length === 1) {
         return {
           type: "single-card",
-          message: autoPlayEnabled 
+          message: autoPlayEnabled
             ? `${currentPlayer.name} has 1 valid card - will auto-play soon`
             : `${currentPlayer.name} has 1 valid card - click to play or enable auto-play`,
           icon: "🎴",
@@ -147,23 +153,29 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
   const action = getCurrentAction()
 
   return (
-    <div className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 ${action.color} transition-all duration-300`}>
+    <div
+      className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 ${action.color} transition-all duration-300`}
+    >
       <div className="text-2xl" role="img" aria-label={action.type}>
         {action.icon}
       </div>
       <div className="flex-1">
         <div className="font-semibold text-sm uppercase tracking-wide opacity-75">
-          {action.type.replace('-', ' ')}
+          {action.type.replace("-", " ")}
         </div>
-        <div className="font-medium">
-          {action.message}
-        </div>
+        <div className="font-medium">{action.message}</div>
       </div>
       {(action.type === "auto-play" || action.type === "auto-skip") && (
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: "0.2s" }}></div>
-          <div className="w-2 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: "0.4s" }}></div>
+          <div
+            className="w-2 h-2 bg-current rounded-full animate-pulse"
+            style={{ animationDelay: "0.2s" }}
+          ></div>
+          <div
+            className="w-2 h-2 bg-current rounded-full animate-pulse"
+            style={{ animationDelay: "0.4s" }}
+          ></div>
         </div>
       )}
     </div>
