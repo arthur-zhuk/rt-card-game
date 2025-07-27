@@ -119,14 +119,25 @@ export const canPlayCards = (
   if (cards.length === 0) return false
   if (cards.length === 1) return canPlayCard(cards[0], topDiscardCard)
 
-  // For multiple cards, they must all have the same value
+  // For multiple cards, check two scenarios:
+
+  // 1. All cards have the same value (e.g., multiple 5s on a 5)
   const firstCardValue = cards[0].value
   const allSameValue = cards.every((card) => card.value === firstCardValue)
 
-  if (!allSameValue) return false
+  if (allSameValue) {
+    // Check if the first card can be played (all others have same value)
+    return canPlayCard(cards[0], topDiscardCard)
+  }
 
-  // Check if the first card can be played (all others have same value)
-  return canPlayCard(cards[0], topDiscardCard)
+  // 2. Cards sum to the discard pile value (e.g., 2+3=5 on a 5)
+  const cardsSum = cards.reduce(
+    (sum, card) => sum + getCardNumericValue(card.value),
+    0
+  )
+  const topDiscardValue = getCardNumericValue(topDiscardCard.value)
+
+  return cardsSum === topDiscardValue
 }
 
 export const dealCards = (
