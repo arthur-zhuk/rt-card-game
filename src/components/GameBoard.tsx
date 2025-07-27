@@ -16,10 +16,10 @@
  */
 
 import React, { useEffect } from "react"
+
 import { useMachine } from "@xstate/react"
 import { cardGameMachine } from "../machines/cardGameMachine"
 import type { GameContext, Player } from "../types/game"
-
 import { getValidCards } from "../utils/cardUtils"
 
 // Helper function to check if current player has valid moves
@@ -42,6 +42,8 @@ const hasAnyValidMoves = (context: GameContext): boolean => {
     (player: Player) => getValidCards(player.hand, topDiscardCard).length > 0
   )
 }
+
+// Import components
 import PlayerHand from "./PlayerHand"
 import DiscardPile from "./DiscardPile"
 import GameTimer from "./GameTimer"
@@ -84,6 +86,13 @@ const GameBoard: React.FC = () => {
               playerId: currentPlayer.id,
             })
           }, 1000)
+        }
+        // Auto-advance if no valid cards (player cannot move)
+        else if (validCards.length === 0) {
+          setTimeout(() => {
+            // This will trigger the waitingForTurn state which handles turn advancement
+            send({ type: "SKIP_TURN" })
+          }, 1500) // Slightly longer delay to show the "no moves" state
         }
       }
     }
@@ -180,17 +189,14 @@ const GameBoard: React.FC = () => {
           playersCount={context.players.length}
           noValidMoves={currentPlayerNoValidMoves}
         />
-        {currentPlayerNoValidMoves &&
-          (state.matches("playerTurn") || state.matches("waitingForTurn")) && (
-            <button
-              onClick={() =>
-                send({ type: noValidMoves ? "END_GAME" : "SKIP_TURN" })
-              }
-              className="bg-red-500 text-white border-none px-6 py-3 rounded-lg text-base font-bold cursor-pointer transition-all duration-200 hover:bg-red-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/30"
-            >
-              {noValidMoves ? "End Game" : "Skip Turn"}
-            </button>
-          )}
+        {noValidMoves && state.matches("playerTurn") && (
+          <button
+            onClick={() => send({ type: "END_GAME" })}
+            className="bg-red-500 text-white border-none px-6 py-3 rounded-lg text-base font-bold cursor-pointer transition-all duration-200 hover:bg-red-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-500/30"
+          >
+            End Game
+          </button>
+        )}
       </div>
 
       <div className="flex-1 flex flex-col gap-5">

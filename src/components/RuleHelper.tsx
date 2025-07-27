@@ -100,8 +100,8 @@ export const RuleHelper: React.FC<RuleHelperProps> = ({
             </div>
           ) : (
             <div className="mt-3 text-sm">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                ✗ No valid cards - wait for timer
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                ⏭ No valid cards - advancing to next player
               </span>
             </div>
           )}

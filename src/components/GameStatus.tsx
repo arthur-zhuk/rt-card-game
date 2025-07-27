@@ -15,19 +15,17 @@ const GameStatus: React.FC<GameStatusProps> = ({
   noValidMoves = false,
 }) => {
   const getStatusMessage = () => {
-    if (
-      noValidMoves &&
-      (currentState === "playerTurn" || currentState === "waitingForTurn")
-    ) {
-      return "No valid moves remaining!"
-    }
-
     switch (currentState) {
       case "lobby":
         return `Waiting for players (${playersCount}/4)`
       case "gameStarting":
         return "Game starting... Dealing cards"
       case "playerTurn":
+        if (noValidMoves) {
+          return currentPlayer
+            ? `${currentPlayer.name} has no valid moves - advancing...`
+            : "No valid moves - advancing..."
+        }
         return currentPlayer ? `${currentPlayer.name}'s turn` : "Player turn"
       case "waitingForTurn":
         return "Processing turn..."
