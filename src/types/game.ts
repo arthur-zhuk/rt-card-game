@@ -44,6 +44,13 @@ export interface AutoPlayNotification {
   type: "auto-play" | "auto-skip"
 }
 
+export type GameEndReason =
+  | "timer_expired"
+  | "no_valid_moves"
+  | "manual_end"
+  | "player_won"
+  | null
+
 export interface GameContext {
   players: Player[]
   currentPlayerIndex: number
@@ -56,6 +63,7 @@ export interface GameContext {
   finalScores: PlayerScore[]
   winner: PlayerScore | null
   autoPlayNotifications: AutoPlayNotification[]
+  gameEndReason: GameEndReason
 }
 
 export type GameEvent =

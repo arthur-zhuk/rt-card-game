@@ -181,6 +181,7 @@ const GameBoard: React.FC = () => {
       <GameOver
         finalScores={context.finalScores}
         winner={context.winner}
+        gameEndReason={context.gameEndReason}
         onRestart={() => send({ type: "RESTART_GAME" })}
         onLeave={(playerId) => send({ type: "LEAVE_GAME", playerId })}
       />

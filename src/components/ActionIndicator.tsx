@@ -40,14 +40,42 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
     }
 
     if (currentState === "gameEnding") {
-      // Check if game ended due to time or no valid moves
-      const endedDueToTime = context.gameTimer <= 0
+      // Show detailed message based on why the game ended
+      const endReason = context.gameEndReason
+
+      let message = "Calculating final scores..."
+      let icon = "🏁"
+
+      switch (endReason) {
+        case "timer_expired":
+          message =
+            "⏰ Time's up! Game ended after 3 minutes. Calculating final scores..."
+          icon = "⏰"
+          break
+        case "no_valid_moves":
+          message =
+            "🚫 No valid moves available for any player! Calculating final scores..."
+          icon = "🚫"
+          break
+        case "manual_end":
+          message =
+            "🛑 Game manually ended by player. Calculating final scores..."
+          icon = "🛑"
+          break
+        case "player_won":
+          message =
+            "🎉 A player emptied their hand and won! Calculating final scores..."
+          icon = "🎉"
+          break
+        default:
+          message = "🏁 Game ended. Calculating final scores..."
+          icon = "🏁"
+      }
+
       return {
         type: "ending",
-        message: endedDueToTime
-          ? "Time's up! Calculating final scores..."
-          : "No more valid moves! Calculating final scores...",
-        icon: endedDueToTime ? "⏰" : "🏁",
+        message,
+        icon,
         color: "bg-purple-100 text-purple-800 border-purple-200",
       }
     }

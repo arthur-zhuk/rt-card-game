@@ -41,6 +41,7 @@ const initialContext: GameContext = {
   finalScores: [],
   winner: null,
   autoPlayNotifications: [],
+  gameEndReason: null,
 }
 
 export const cardGameMachine = createMachine({
@@ -112,6 +113,9 @@ export const cardGameMachine = createMachine({
       on: {
         END_GAME: {
           target: "gameEnding",
+          actions: assign({
+            gameEndReason: () => "manual_end" as const,
+          }),
         },
         SKIP_TURN: {
           target: "waitingForTurn",
@@ -166,114 +170,239 @@ export const cardGameMachine = createMachine({
               context.selectedCards.filter((card) => card.id !== event.cardId),
           }),
         },
-        PLAY_CARDS: {
-          target: "waitingForTurn",
-          actions: assign(({ context, event }) => {
-            const currentPlayer = context.players[context.currentPlayerIndex]
-            const cardsToPlay = event.cards
+        PLAY_CARDS: [
+          {
+            target: "gameEnding",
+            guard: ({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+              const topDiscardCard =
+                context.discardPile[context.discardPile.length - 1]
 
-            // Remove played cards from player's hand
-            const updatedHand = currentPlayer.hand.filter(
-              (card) =>
-                !cardsToPlay.find(
-                  (playedCard: Card) => playedCard.id === card.id
-                )
-            )
+              // Check if this play would empty the player's hand
+              const cardsToPlay = event.cards
+              const remainingCards = currentPlayer.hand.filter(
+                (card) =>
+                  !cardsToPlay.find(
+                    (playedCard: Card) => playedCard.id === card.id
+                  )
+              )
 
-            // Update discard pile
-            const newDiscardPile = [...context.discardPile, ...cardsToPlay]
+              return (
+                currentPlayer.id === event.playerId &&
+                event.cards.length > 0 &&
+                canPlayCards(event.cards, topDiscardCard) &&
+                remainingCards.length === 0 // Player wins!
+              )
+            },
+            actions: assign(({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+              const cardsToPlay = event.cards
 
-            // Update players
-            const updatedPlayers = context.players.map((player, index) => ({
-              ...player,
-              hand:
-                index === context.currentPlayerIndex
-                  ? updatedHand
-                  : player.hand,
-              isCurrentPlayer: false,
-            }))
+              // Remove played cards from player's hand
+              const updatedHand = currentPlayer.hand.filter(
+                (card) =>
+                  !cardsToPlay.find(
+                    (playedCard: Card) => playedCard.id === card.id
+                  )
+              )
 
-            return {
-              players: updatedPlayers,
-              discardPile: newDiscardPile,
-              selectedCards: [],
-            }
-          }),
-          guard: ({ context, event }) => {
-            const currentPlayer = context.players[context.currentPlayerIndex]
-            const topDiscardCard =
-              context.discardPile[context.discardPile.length - 1]
+              // Update discard pile
+              const newDiscardPile = [...context.discardPile, ...cardsToPlay]
 
-            return (
-              currentPlayer.id === event.playerId &&
-              event.cards.length > 0 &&
-              canPlayCards(event.cards, topDiscardCard)
-            )
+              // Update players
+              const updatedPlayers = context.players.map((player, index) => ({
+                ...player,
+                hand:
+                  index === context.currentPlayerIndex
+                    ? updatedHand
+                    : player.hand,
+                isCurrentPlayer: false,
+              }))
+
+              return {
+                players: updatedPlayers,
+                discardPile: newDiscardPile,
+                selectedCards: [],
+                gameEndReason: "player_won" as const,
+              }
+            }),
           },
-        },
-        AUTO_PLAY: {
-          target: "waitingForTurn",
-          actions: assign(({ context, event }) => {
-            const currentPlayer = context.players[context.currentPlayerIndex]
+          {
+            target: "waitingForTurn",
+            actions: assign(({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+              const cardsToPlay = event.cards
 
-            // Remove played card from player's hand
-            const updatedHand = currentPlayer.hand.filter(
-              (card) => card.id !== event.card.id
-            )
+              // Remove played cards from player's hand
+              const updatedHand = currentPlayer.hand.filter(
+                (card) =>
+                  !cardsToPlay.find(
+                    (playedCard: Card) => playedCard.id === card.id
+                  )
+              )
 
-            // Update discard pile
-            const newDiscardPile = [...context.discardPile, event.card]
+              // Update discard pile
+              const newDiscardPile = [...context.discardPile, ...cardsToPlay]
 
-            // Update players
-            const updatedPlayers = context.players.map((player, index) => ({
-              ...player,
-              hand:
-                index === context.currentPlayerIndex
-                  ? updatedHand
-                  : player.hand,
-              isCurrentPlayer: false,
-            }))
+              // Update players
+              const updatedPlayers = context.players.map((player, index) => ({
+                ...player,
+                hand:
+                  index === context.currentPlayerIndex
+                    ? updatedHand
+                    : player.hand,
+                isCurrentPlayer: false,
+              }))
 
-            // Add auto-play notification
-            const notification = {
-              id: uuidv4(),
-              playerId: currentPlayer.id,
-              playerName: currentPlayer.name,
-              card: event.card,
-              timestamp: new Date(),
-              type: "auto-play" as const,
-            }
+              return {
+                players: updatedPlayers,
+                discardPile: newDiscardPile,
+                selectedCards: [],
+              }
+            }),
+            guard: ({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+              const topDiscardCard =
+                context.discardPile[context.discardPile.length - 1]
 
-            // Keep only the last 10 notifications to prevent memory bloat
-            const updatedNotifications = [
-              ...context.autoPlayNotifications,
-              notification,
-            ].slice(-10)
-
-            return {
-              players: updatedPlayers,
-              discardPile: newDiscardPile,
-              selectedCards: [],
-              autoPlayNotifications: updatedNotifications,
-            }
-          }),
-          guard: ({ context, event }) => {
-            const currentPlayer = context.players[context.currentPlayerIndex]
-            const topDiscardCard =
-              context.discardPile[context.discardPile.length - 1]
-
-            return (
-              currentPlayer.id === event.playerId &&
-              canPlayCards([event.card], topDiscardCard)
-            )
+              return (
+                currentPlayer.id === event.playerId &&
+                event.cards.length > 0 &&
+                canPlayCards(event.cards, topDiscardCard)
+              )
+            },
           },
-        },
+        ],
+        AUTO_PLAY: [
+          {
+            target: "gameEnding",
+            guard: ({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+              const topDiscardCard =
+                context.discardPile[context.discardPile.length - 1]
+
+              // Check if this auto-play would empty the player's hand
+              const remainingCards = currentPlayer.hand.filter(
+                (card) => card.id !== event.card.id
+              )
+
+              return (
+                currentPlayer.id === event.playerId &&
+                canPlayCards([event.card], topDiscardCard) &&
+                remainingCards.length === 0 // Player wins!
+              )
+            },
+            actions: assign(({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+
+              // Remove played card from player's hand
+              const updatedHand = currentPlayer.hand.filter(
+                (card) => card.id !== event.card.id
+              )
+
+              // Update discard pile
+              const newDiscardPile = [...context.discardPile, event.card]
+
+              // Update players
+              const updatedPlayers = context.players.map((player, index) => ({
+                ...player,
+                hand:
+                  index === context.currentPlayerIndex
+                    ? updatedHand
+                    : player.hand,
+                isCurrentPlayer: false,
+              }))
+
+              // Add auto-play notification
+              const notification = {
+                id: uuidv4(),
+                playerId: currentPlayer.id,
+                playerName: currentPlayer.name,
+                card: event.card,
+                timestamp: new Date(),
+                type: "auto-play" as const,
+              }
+
+              // Keep only the last 10 notifications to prevent memory bloat
+              const updatedNotifications = [
+                ...context.autoPlayNotifications,
+                notification,
+              ].slice(-10)
+
+              return {
+                players: updatedPlayers,
+                discardPile: newDiscardPile,
+                selectedCards: [],
+                autoPlayNotifications: updatedNotifications,
+                gameEndReason: "player_won" as const,
+              }
+            }),
+          },
+          {
+            target: "waitingForTurn",
+            actions: assign(({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+
+              // Remove played card from player's hand
+              const updatedHand = currentPlayer.hand.filter(
+                (card) => card.id !== event.card.id
+              )
+
+              // Update discard pile
+              const newDiscardPile = [...context.discardPile, event.card]
+
+              // Update players
+              const updatedPlayers = context.players.map((player, index) => ({
+                ...player,
+                hand:
+                  index === context.currentPlayerIndex
+                    ? updatedHand
+                    : player.hand,
+                isCurrentPlayer: false,
+              }))
+
+              // Add auto-play notification
+              const notification = {
+                id: uuidv4(),
+                playerId: currentPlayer.id,
+                playerName: currentPlayer.name,
+                card: event.card,
+                timestamp: new Date(),
+                type: "auto-play" as const,
+              }
+
+              // Keep only the last 10 notifications to prevent memory bloat
+              const updatedNotifications = [
+                ...context.autoPlayNotifications,
+                notification,
+              ].slice(-10)
+
+              return {
+                players: updatedPlayers,
+                discardPile: newDiscardPile,
+                selectedCards: [],
+                autoPlayNotifications: updatedNotifications,
+              }
+            }),
+            guard: ({ context, event }) => {
+              const currentPlayer = context.players[context.currentPlayerIndex]
+              const topDiscardCard =
+                context.discardPile[context.discardPile.length - 1]
+
+              return (
+                currentPlayer.id === event.playerId &&
+                canPlayCards([event.card], topDiscardCard)
+              )
+            },
+          },
+        ],
         TIMER_TICK: [
           {
             target: "gameEnding",
             guard: ({ event }) => event.remainingTime <= 0,
             actions: assign({
               gameTimer: ({ event }) => event.remainingTime,
+              gameEndReason: () => "timer_expired" as const,
             }),
           },
           {
@@ -325,6 +454,9 @@ export const cardGameMachine = createMachine({
           {
             target: "gameEnding",
             guard: ({ context }) => !hasAnyValidMoves(context),
+            actions: assign({
+              gameEndReason: () => "no_valid_moves" as const,
+            }),
           },
           {
             target: "playerTurn",
@@ -338,6 +470,7 @@ export const cardGameMachine = createMachine({
             guard: ({ event }) => event.remainingTime <= 0,
             actions: assign({
               gameTimer: ({ event }) => event.remainingTime,
+              gameEndReason: () => "timer_expired" as const,
             }),
           },
           {
