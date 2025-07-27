@@ -57,6 +57,7 @@ const GameBoard: React.FC = () => {
   const [state, send] = useMachine(cardGameMachine)
   const { context } = state
   const [autoPlayEnabled, setAutoPlayEnabled] = React.useState(false)
+  const autoPlayTimerRef = React.useRef<number | null>(null)
 
   // Timer effect
   useEffect(() => {
@@ -70,34 +71,54 @@ const GameBoard: React.FC = () => {
     }
   }, [state, context.gameTimer, send])
 
-  // Auto-play effect (only when enabled)
+  // Auto-play effect (only when enabled) with proper cleanup
   useEffect(() => {
+    // Clear any existing timer first
+    if (autoPlayTimerRef.current) {
+      clearTimeout(autoPlayTimerRef.current)
+      autoPlayTimerRef.current = null
+    }
+
     if (state.matches("playerTurn") && autoPlayEnabled) {
       const currentPlayer = context.players[context.currentPlayerIndex]
       const topDiscardCard = context.discardPile[context.discardPile.length - 1]
 
-      if (currentPlayer && topDiscardCard) {
+      if (
+        currentPlayer &&
+        topDiscardCard &&
+        context.selectedCards.length === 0
+      ) {
         const validCards = getValidCards(currentPlayer.hand, topDiscardCard)
 
         // Auto-play if only one valid card (reasonable timing for human play)
-        if (validCards.length === 1 && context.selectedCards.length === 0) {
-          setTimeout(() => {
+        if (validCards.length === 1) {
+          autoPlayTimerRef.current = setTimeout(() => {
             send({
               type: "AUTO_PLAY",
               card: validCards[0],
               playerId: currentPlayer.id,
             })
+            autoPlayTimerRef.current = null
           }, 3000) // 3 seconds - enough time to see the situation but not too slow
         }
         // Auto-advance if no valid cards (reasonable timing for human play)
         else if (validCards.length === 0) {
-          setTimeout(() => {
+          autoPlayTimerRef.current = setTimeout(() => {
             send({ type: "SKIP_TURN" })
+            autoPlayTimerRef.current = null
           }, 4000) // 4 seconds - time to verify no valid moves without being tedious
         }
       }
     }
-  }, [state, context, send, autoPlayEnabled])
+
+    // Cleanup function to prevent overlapping timers
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearTimeout(autoPlayTimerRef.current)
+        autoPlayTimerRef.current = null
+      }
+    }
+  }, [state, context, autoPlayEnabled, send])
 
   // Keyboard event handler for SPACE key
   useEffect(() => {

@@ -242,8 +242,30 @@ export const cardGameMachine = createMachine({
     },
     waitingForTurn: {
       entry: assign(({ context }) => {
-        const nextPlayerIndex =
+        // Find the next player who has valid moves, or cycle through all players
+        let nextPlayerIndex =
           (context.currentPlayerIndex + 1) % context.players.length
+        let attempts = 0
+        const maxAttempts = context.players.length
+
+        const topDiscardCard =
+          context.discardPile[context.discardPile.length - 1]
+
+        // Keep advancing until we find a player with valid moves or exhaust all players
+        while (attempts < maxAttempts && topDiscardCard) {
+          const nextPlayer = context.players[nextPlayerIndex]
+          const validCards = getValidCards(nextPlayer.hand, topDiscardCard)
+
+          // If this player has valid moves, stop here
+          if (validCards.length > 0) {
+            break
+          }
+
+          // Otherwise, try the next player
+          nextPlayerIndex = (nextPlayerIndex + 1) % context.players.length
+          attempts++
+        }
+
         const updatedPlayers = context.players.map((player, index) => ({
           ...player,
           isCurrentPlayer: index === nextPlayerIndex,
