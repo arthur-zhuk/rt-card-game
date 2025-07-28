@@ -33,12 +33,18 @@ describe("AutoPlayNotifications", () => {
     render(<AutoPlayNotifications notifications={[notification]} />)
 
     expect(screen.getByText("Auto-Played")).toBeInTheDocument()
-    expect(
-      screen.getByText((content, element) => {
-        return element?.textContent?.includes("Alice played 7♥") ?? false
-      })
-    ).toBeInTheDocument()
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+    expect(screen.getByText("played")).toBeInTheDocument()
     expect(screen.getByText("🤖")).toBeInTheDocument()
+    // Check for the card value and suit in the bold span
+    const cardText = screen.getByText((content, element) => {
+      return (
+        element?.classList.contains("font-bold") &&
+        content.includes("7") &&
+        content.includes("♥")
+      )
+    })
+    expect(cardText).toBeInTheDocument()
   })
 
   it("renders auto-skip notification correctly", () => {
@@ -51,11 +57,8 @@ describe("AutoPlayNotifications", () => {
     render(<AutoPlayNotifications notifications={[notification]} />)
 
     expect(screen.getByText("Auto-Skipped")).toBeInTheDocument()
-    expect(
-      screen.getByText((content, element) => {
-        return element?.textContent?.includes("Bob had no valid moves") ?? false
-      })
-    ).toBeInTheDocument()
+    expect(screen.getByText("Bob")).toBeInTheDocument()
+    expect(screen.getByText("had no valid moves")).toBeInTheDocument()
     expect(screen.getByText("⏭️")).toBeInTheDocument()
   })
 
@@ -131,16 +134,10 @@ describe("AutoPlayNotifications", () => {
 
     render(<AutoPlayNotifications notifications={notifications} />)
 
-    expect(
-      screen.getByText((content, element) => {
-        return element?.textContent?.includes("Alice played") ?? false
-      })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText((content, element) => {
-        return element?.textContent?.includes("Bob had no valid moves") ?? false
-      })
-    ).toBeInTheDocument()
+    expect(screen.getByText("Alice")).toBeInTheDocument()
+    expect(screen.getByText("played")).toBeInTheDocument()
+    expect(screen.getByText("Bob")).toBeInTheDocument()
+    expect(screen.getByText("had no valid moves")).toBeInTheDocument()
   })
 
   it("limits visible notifications to maxVisible prop", () => {
