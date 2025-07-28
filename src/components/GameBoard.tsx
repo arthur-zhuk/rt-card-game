@@ -21,6 +21,15 @@ import { useMachine } from "@xstate/react"
 import { cardGameMachine } from "../machines/cardGameMachine"
 import type { GameContext, Player } from "../types/game"
 import { getValidCards } from "../utils/cardUtils"
+import PlayerHand from "./PlayerHand"
+import DiscardPile from "./DiscardPile"
+import GameTimer from "./GameTimer"
+import GameStatus from "./GameStatus"
+import Lobby from "./Lobby"
+import GameOver from "./GameOver"
+import { RuleHelper } from "./RuleHelper"
+import ActionIndicator from "./ActionIndicator"
+import AutoPlayNotifications from "./AutoPlayNotifications"
 
 // Helper function to check if current player has valid moves
 const currentPlayerHasValidMoves = (context: GameContext): boolean => {
@@ -42,17 +51,6 @@ const hasAnyValidMoves = (context: GameContext): boolean => {
     (player: Player) => getValidCards(player.hand, topDiscardCard).length > 0
   )
 }
-
-// Import components
-import PlayerHand from "./PlayerHand"
-import DiscardPile from "./DiscardPile"
-import GameTimer from "./GameTimer"
-import GameStatus from "./GameStatus"
-import Lobby from "./Lobby"
-import GameOver from "./GameOver"
-import { RuleHelper } from "./RuleHelper"
-import ActionIndicator from "./ActionIndicator"
-import AutoPlayNotifications from "./AutoPlayNotifications"
 
 const GameBoard: React.FC = () => {
   const [state, send] = useMachine(cardGameMachine)
