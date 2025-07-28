@@ -38,7 +38,7 @@ describe("AutoPlayNotifications", () => {
     expect(screen.getByText("🤖")).toBeInTheDocument()
     // Check for the card value and suit in the bold span
     const cardText = screen.getByText((content, element) => {
-      return (
+      return !!(
         element?.classList.contains("font-bold") &&
         content.includes("7") &&
         content.includes("♥")

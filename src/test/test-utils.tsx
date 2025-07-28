@@ -1,6 +1,7 @@
-import React, { ReactElement } from "react"
-import { render, RenderOptions } from "@testing-library/react"
-import type { Card, Player, GameContext } from "../types/game"
+import type { ReactElement } from "react"
+import { render, type RenderOptions } from "@testing-library/react"
+import type { Card, Player, GameContext, CardValue } from "../types/game"
+import { vi } from "vitest"
 
 // Custom render function that includes providers if needed
 const customRender = (
@@ -15,13 +16,13 @@ export { customRender as render }
 export const createMockCard = (overrides?: Partial<Card>): Card => {
   const card = {
     id: "test-card-1",
-    value: "7",
+    value: "7" as CardValue,
     suit: "hearts" as const,
     ...overrides,
   }
 
   // Add points based on value
-  const getCardPoints = (value: string): number => {
+  const getCardPoints = (value: CardValue): number => {
     if (value === "A") return 1
     if (value === "J") return 11
     if (value === "Q") return 12
@@ -89,7 +90,7 @@ export const createMockMachineState = (
 })
 
 // Helper to create cards with specific values
-export const createCards = (values: string[]): Card[] =>
+export const createCards = (values: CardValue[]): Card[] =>
   values.map((value, index) =>
     createMockCard({
       id: `card-${index}`,

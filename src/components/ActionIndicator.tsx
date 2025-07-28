@@ -155,6 +155,7 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
 
   return (
     <div
+      role="alert"
       className={`flex items-center gap-3 px-4 py-3 rounded-lg border-2 ${action.color} transition-all duration-300`}
     >
       <div className="text-2xl" role="img" aria-label={action.type}>

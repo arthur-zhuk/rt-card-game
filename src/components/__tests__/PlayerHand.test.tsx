@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent } from "../../test/test-utils"
 import PlayerHand from "../PlayerHand"
 import {
@@ -13,7 +13,7 @@ describe("PlayerHand", () => {
   const defaultProps = {
     player: createMockPlayer({
       name: "Test Player",
-      hand: createCards(["7", "8", "5"]),
+      hand: createCards(["7", "8", "5"] as const),
     }),
     isCurrentPlayer: false,
     selectedCards: [],
@@ -100,7 +100,7 @@ describe("PlayerHand", () => {
     // When interaction is disabled, cards don't have button role
     // Find the card by its large value text (not the small score text)
     const cardValue = screen.getByText((content, element) => {
-      return element?.classList.contains("text-lg") && content === "7"
+      return !!(element?.classList.contains("text-lg") && content === "7")
     })
     const cardContainer = cardValue.closest("div")
     fireEvent.click(cardContainer!)

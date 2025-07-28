@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { render, screen, fireEvent } from "../../test/test-utils"
 import CardComponent from "../Card"
 import { createMockCard } from "../../test/test-utils"
+import type { CardValue } from "../../types/game"
 
 describe("CardComponent", () => {
   const mockOnClick = vi.fn()
@@ -181,7 +182,7 @@ describe("CardComponent", () => {
   })
 
   it("handles face cards correctly", () => {
-    const faceCards = ["J", "Q", "K", "A"]
+    const faceCards: CardValue[] = ["J", "Q", "K", "A"]
 
     faceCards.forEach((value) => {
       const card = createMockCard({ value })
