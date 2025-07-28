@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo, useMemo } from "react"
 import type { AutoPlayNotification } from "../types/game"
 
 interface AutoPlayNotificationsProps {
@@ -11,7 +11,9 @@ const AutoPlayNotifications: React.FC<AutoPlayNotificationsProps> = ({
   maxVisible = 5,
 }) => {
   // Show only the most recent notifications
-  const recentNotifications = notifications.slice(-maxVisible).reverse()
+  const recentNotifications = useMemo(() => {
+    return notifications.slice(-maxVisible).reverse()
+  }, [notifications, maxVisible])
 
   if (recentNotifications.length === 0) {
     return null
@@ -38,12 +40,15 @@ const AutoPlayNotifications: React.FC<AutoPlayNotificationsProps> = ({
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm">
-              {notification.type === "auto-play" ? "Auto-Played" : "Auto-Skipped"}
+              {notification.type === "auto-play"
+                ? "Auto-Played"
+                : "Auto-Skipped"}
             </div>
             <div className="text-sm">
               {notification.type === "auto-play" && notification.card ? (
                 <>
-                  <span className="font-medium">{notification.playerName}</span> played{" "}
+                  <span className="font-medium">{notification.playerName}</span>{" "}
+                  played{" "}
                   <span className="font-bold">
                     {notification.card.value}
                     {notification.card.suit === "hearts" && "♥"}
@@ -54,7 +59,8 @@ const AutoPlayNotifications: React.FC<AutoPlayNotificationsProps> = ({
                 </>
               ) : (
                 <>
-                  <span className="font-medium">{notification.playerName}</span> had no valid moves
+                  <span className="font-medium">{notification.playerName}</span>{" "}
+                  had no valid moves
                 </>
               )}
             </div>
@@ -72,4 +78,4 @@ const AutoPlayNotifications: React.FC<AutoPlayNotificationsProps> = ({
   )
 }
 
-export default AutoPlayNotifications
+export default memo(AutoPlayNotifications)

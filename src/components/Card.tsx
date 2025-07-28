@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo, useMemo } from "react"
 import type { Card as CardType } from "../types/game"
 
 interface CardProps {
@@ -18,8 +18,8 @@ const CardComponent: React.FC<CardProps> = ({
   onClick,
   size = "medium",
 }) => {
-  const getSuitSymbol = (suit: string) => {
-    switch (suit) {
+  const suitSymbol = useMemo(() => {
+    switch (card.suit) {
       case "hearts":
         return "♥"
       case "diamonds":
@@ -31,13 +31,13 @@ const CardComponent: React.FC<CardProps> = ({
       default:
         return ""
     }
-  }
+  }, [card.suit])
 
-  const getSuitColor = (suit: string) => {
-    return suit === "hearts" || suit === "diamonds"
+  const suitColor = useMemo(() => {
+    return card.suit === "hearts" || card.suit === "diamonds"
       ? "text-red-600"
       : "text-gray-800"
-  }
+  }, [card.suit])
 
   const getSizeClasses = () => {
     switch (size) {
@@ -74,9 +74,7 @@ const CardComponent: React.FC<CardProps> = ({
   }
 
   const getCardClasses = () => {
-    const baseClasses = `${getSizeClasses()} bg-white border-2 rounded-lg flex flex-col items-center justify-center font-bold transition-all duration-200 relative ${getSuitColor(
-      card.suit
-    )}`
+    const baseClasses = `${getSizeClasses()} bg-white border-2 rounded-lg flex flex-col items-center justify-center font-bold transition-all duration-200 relative ${suitColor}`
 
     let classes = baseClasses + " border-gray-300"
 
@@ -105,9 +103,7 @@ const CardComponent: React.FC<CardProps> = ({
         <div className={`${getTextSizeClasses().value} font-bold`}>
           {card.value}
         </div>
-        <div className={getTextSizeClasses().suit}>
-          {getSuitSymbol(card.suit)}
-        </div>
+        <div className={getTextSizeClasses().suit}>{suitSymbol}</div>
         <div className={`${getTextSizeClasses().points} opacity-70`}>
           {card.points}
         </div>
@@ -116,4 +112,4 @@ const CardComponent: React.FC<CardProps> = ({
   )
 }
 
-export default CardComponent
+export default memo(CardComponent)

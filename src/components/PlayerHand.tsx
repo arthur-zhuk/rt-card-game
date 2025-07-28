@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo, useMemo, useCallback } from "react"
 import type { Player, Card as CardType } from "../types/game"
 import { getValidCards, calculateHandScore } from "../utils/cardUtils"
 import CardComponent from "./Card"
@@ -20,10 +20,23 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   canInteract,
   topDiscardCard,
 }) => {
-  const handScore = calculateHandScore(player.hand)
-  const validCards = topDiscardCard
-    ? getValidCards(player.hand, topDiscardCard)
-    : []
+  const handScore = useMemo(
+    () => calculateHandScore(player.hand),
+    [player.hand]
+  )
+
+  const validCards = useMemo(() => {
+    return topDiscardCard ? getValidCards(player.hand, topDiscardCard) : []
+  }, [player.hand, topDiscardCard])
+
+  const handleCardClick = useCallback(
+    (cardId: string) => {
+      if (canInteract) {
+        onCardSelect(cardId)
+      }
+    },
+    [canInteract, onCardSelect]
+  )
 
   return (
     <div
@@ -62,7 +75,7 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
               isSelected={isSelected}
               isValid={isValid}
               canInteract={canInteract}
-              onClick={() => canInteract && onCardSelect(card.id)}
+              onClick={() => handleCardClick(card.id)}
             />
           )
         })}
@@ -71,4 +84,4 @@ const PlayerHand: React.FC<PlayerHandProps> = ({
   )
 }
 
-export default PlayerHand
+export default memo(PlayerHand)

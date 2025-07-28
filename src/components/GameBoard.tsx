@@ -15,7 +15,7 @@
  * @component
  */
 
-import React, { useEffect } from "react"
+import React, { useEffect, useMemo, useCallback } from "react"
 
 import { useMachine } from "@xstate/react"
 import { cardGameMachine } from "../machines/cardGameMachine"
@@ -55,6 +55,15 @@ const hasAnyValidMoves = (context: GameContext): boolean => {
 const GameBoard: React.FC = () => {
   const [state, send] = useMachine(cardGameMachine)
   const { context } = state
+
+  // Memoize expensive computations
+  const currentPlayerNoValidMoves = useMemo(() => {
+    return !currentPlayerHasValidMoves(context)
+  }, [context])
+
+  const noValidMoves = useMemo(() => {
+    return !hasAnyValidMoves(context)
+  }, [context])
 
   // Timer effect
   useEffect(() => {
@@ -130,28 +139,33 @@ const GameBoard: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [state, context, send])
 
-  const handleCardSelect = (cardId: string) => {
-    const currentPlayer = context.players[context.currentPlayerIndex]
-    if (!currentPlayer) return
+  const handleCardSelect = useCallback(
+    (cardId: string) => {
+      const currentPlayer = context.players[context.currentPlayerIndex]
+      if (!currentPlayer) return
 
-    const isSelected = context.selectedCards.some((card) => card.id === cardId)
+      const isSelected = context.selectedCards.some(
+        (card) => card.id === cardId
+      )
 
-    if (isSelected) {
-      send({
-        type: "CARD_DESELECTED",
-        cardId,
-        playerId: currentPlayer.id,
-      })
-    } else {
-      send({
-        type: "CARD_SELECTED",
-        cardId,
-        playerId: currentPlayer.id,
-      })
-    }
-  }
+      if (isSelected) {
+        send({
+          type: "CARD_DESELECTED",
+          cardId,
+          playerId: currentPlayer.id,
+        })
+      } else {
+        send({
+          type: "CARD_SELECTED",
+          cardId,
+          playerId: currentPlayer.id,
+        })
+      }
+    },
+    [context.players, context.currentPlayerIndex, context.selectedCards, send]
+  )
 
-  const handlePlayCards = () => {
+  const handlePlayCards = useCallback(() => {
     const currentPlayer = context.players[context.currentPlayerIndex]
     if (currentPlayer && context.selectedCards.length > 0) {
       send({
@@ -160,7 +174,7 @@ const GameBoard: React.FC = () => {
         playerId: currentPlayer.id,
       })
     }
-  }
+  }, [context.players, context.currentPlayerIndex, context.selectedCards, send])
 
   if (state.matches("lobby")) {
     return (
@@ -186,13 +200,8 @@ const GameBoard: React.FC = () => {
     )
   }
 
-  // Check if current player has no valid moves (for UI button)
-  const currentPlayerNoValidMoves = !currentPlayerHasValidMoves(context)
-  // Check if no valid moves are available for any player (for automatic game ending)
-  const noValidMoves = !hasAnyValidMoves(context)
-
   return (
-    <div className="flex-1 flex flex-col p-5 max-w-7xl mx-auto w-full">
+    <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto">
       <div className="flex justify-between items-center bg-white/95 px-6 py-4 rounded-xl mb-5 shadow-lg">
         <div className="flex items-center gap-6">
           <GameTimer timeRemaining={context.gameTimer} />
@@ -233,53 +242,74 @@ const GameBoard: React.FC = () => {
         />
       </div>
 
-      <div className="flex-1 flex flex-col gap-5">
-        <div className="flex justify-center my-5">
-          <DiscardPile
-            discardPile={context.discardPile}
-            deckSize={context.deck.length}
+      {/* Main Game Area */}
+      <div className="flex-1 flex flex-col gap-6">
+        {/* Discard Pile Section */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div className="flex justify-center">
+            <DiscardPile
+              discardPile={context.discardPile}
+              deckSize={context.deck.length}
+            />
+          </div>
+        </div>
+
+        {/* Rule Helper */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <RuleHelper
+            topDiscardCard={
+              context.discardPile[context.discardPile.length - 1] || null
+            }
+            validCards={getValidCards(
+              context.players[context.currentPlayerIndex]?.hand || [],
+              context.discardPile[context.discardPile.length - 1]
+            )}
+            selectedCards={context.selectedCards}
+            isVisible={state.matches("playerTurn")}
           />
         </div>
 
-        <RuleHelper
-          topDiscardCard={
-            context.discardPile[context.discardPile.length - 1] || null
-          }
-          validCards={getValidCards(
-            context.players[context.currentPlayerIndex]?.hand || [],
-            context.discardPile[context.discardPile.length - 1]
-          )}
-          selectedCards={context.selectedCards}
-          isVisible={state.matches("playerTurn")}
-        />
-
-        <div className="flex flex-col gap-4">
-          {context.players.map((player, index) => (
-            <PlayerHand
-              key={player.id}
-              player={player}
-              isCurrentPlayer={index === context.currentPlayerIndex}
-              selectedCards={context.selectedCards}
-              onCardSelect={handleCardSelect}
-              canInteract={
-                state.matches("playerTurn") &&
-                index === context.currentPlayerIndex
-              }
-              topDiscardCard={
-                context.discardPile[context.discardPile.length - 1]
-              }
-            />
-          ))}
+        {/* Players Section */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold">👥</span>
+            </div>
+            <h3 className="text-white font-bold text-lg">Players</h3>
+          </div>
+          <div className="flex flex-col gap-4">
+            {context.players.map((player, index) => (
+              <PlayerHand
+                key={player.id}
+                player={player}
+                isCurrentPlayer={index === context.currentPlayerIndex}
+                selectedCards={context.selectedCards}
+                onCardSelect={handleCardSelect}
+                canInteract={
+                  state.matches("playerTurn") &&
+                  index === context.currentPlayerIndex
+                }
+                topDiscardCard={
+                  context.discardPile[context.discardPile.length - 1]
+                }
+              />
+            ))}
+          </div>
         </div>
 
+        {/* Play Button */}
         {state.matches("playerTurn") && context.selectedCards.length > 0 && (
-          <div className="flex justify-center mt-5">
-            <button
-              onClick={handlePlayCards}
-              className="bg-green-500 text-white border-none px-6 py-3 rounded-lg text-base font-bold cursor-pointer transition-all duration-200 hover:bg-green-600 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-500/30"
-            >
-              Play Selected Cards (or press SPACE)
-            </button>
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+            <div className="flex justify-center">
+              <button
+                onClick={handlePlayCards}
+                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white border-none px-8 py-4 rounded-xl text-lg font-bold cursor-pointer transition-all duration-200 hover:from-green-600 hover:to-emerald-700 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-green-500/30 flex items-center gap-3"
+              >
+                <span>🎯</span>
+                Play Selected Cards
+                <span className="text-sm opacity-80">(or press SPACE)</span>
+              </button>
+            </div>
           </div>
         )}
       </div>

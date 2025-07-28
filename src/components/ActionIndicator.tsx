@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo, useMemo } from "react"
 import type { GameContext } from "../types/game"
 import { getValidCards } from "../utils/cardUtils"
 
@@ -11,7 +11,7 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
   context,
   currentState,
 }) => {
-  const getCurrentAction = () => {
+  const action = useMemo(() => {
     if (currentState === "lobby") {
       return {
         type: "waiting",
@@ -151,9 +151,7 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
       icon: "❓",
       color: "bg-gray-100 text-gray-800 border-gray-200",
     }
-  }
-
-  const action = getCurrentAction()
+  }, [context, currentState])
 
   return (
     <div
@@ -185,4 +183,4 @@ const ActionIndicator: React.FC<ActionIndicatorProps> = ({
   )
 }
 
-export default ActionIndicator
+export default memo(ActionIndicator)
