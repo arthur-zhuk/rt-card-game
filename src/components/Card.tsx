@@ -97,7 +97,7 @@ const CardComponent: React.FC<CardProps> = ({
   return (
     <div
       className={getCardClasses()}
-      onClick={onClick}
+      onClick={canInteract ? onClick : undefined}
       role={canInteract ? "button" : undefined}
       tabIndex={canInteract ? 0 : undefined}
     >

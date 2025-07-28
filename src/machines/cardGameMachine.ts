@@ -4,8 +4,6 @@
  * Implements a comprehensive state machine for managing a multiplayer card game
  * with turn-based play, timer management, and complex game state transitions.
  *
- * @author Frontend Engineering Challenge
- * @version 1.0.0
  */
 
 import { createMachine, assign } from "xstate"
