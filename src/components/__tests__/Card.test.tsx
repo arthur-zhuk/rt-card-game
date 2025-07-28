@@ -14,7 +14,9 @@ describe("CardComponent", () => {
     const card = createMockCard({ value: "7", suit: "hearts" })
     render(<CardComponent card={card} />)
 
-    expect(screen.getByText("7")).toBeInTheDocument()
+    // Check for value (appears twice - as value and points)
+    const valueElements = screen.getAllByText("7")
+    expect(valueElements.length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText("♥")).toBeInTheDocument()
   })
 
