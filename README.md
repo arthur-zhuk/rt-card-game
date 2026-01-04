@@ -1,8 +1,13 @@
 # Real-time Card Game
 
-A professional implementation of a real-time multiplayer card game built with React, TypeScript, and XState. This project demonstrates advanced state machine architecture, real-time game mechanics, and modern frontend development practices.
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![XState](https://img.shields.io/badge/XState-000000?style=for-the-badge&logo=xstate&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 
-## 🎯 Game Overview
+A professional real-time multiplayer card game built with React, TypeScript, and XState. This project demonstrates advanced state machine architecture, real-time game mechanics, and modern frontend development practices.
+
+## Game Overview
 
 **Objective**: Achieve the lowest total hand value when the 3-minute round timer expires.
 
@@ -20,44 +25,38 @@ A professional implementation of a real-time multiplayer card game built with Re
 - **Multiple Cards**: Click to select/deselect, SPACE key to play batch
 - **Skip Turn**: Available when no valid moves exist
 
-## 🏗️ Architecture
-
-This project implements a sophisticated state machine architecture using XState:
-
-```
-LOBBY → GAME_STARTING → PLAYER_TURN ↔ WAITING_FOR_TURN → GAME_ENDING → GAME_OVER
-```
-
-### Key Features
+## Features
 
 - **State Management**: XState for complex game state transitions
 - **Real-time Updates**: Live timer, scores, and turn indicators
 - **Type Safety**: Full TypeScript implementation
 - **Responsive Design**: Tailwind CSS for modern UI
 - **Component Architecture**: Modular, reusable React components
+- **E2E Testing**: Playwright for comprehensive testing
 
-## 🚀 Quick Start
+## Tech Stack
+
+- **Frontend**: React 19, TypeScript
+- **State Management**: XState 5
+- **Styling**: Tailwind CSS 3
+- **Build Tool**: Vite 7
+- **Testing**: Playwright (E2E), Vitest
+- **Linting**: ESLint with TypeScript rules
+
+## Installation
+
+```bash
+git clone https://github.com/arthur-zhuk/rt-card-game.git
+cd rt-card-game
+npm install
+```
 
 ### Prerequisites
 
 - Node.js 18+
 - npm or yarn
 
-### Installation
-
-```bash
-# Clone the repository
-git clone <repository-url>
-cd rt-card-game
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-### Available Scripts
+## Usage
 
 ```bash
 npm run dev      # Start development server
@@ -66,7 +65,9 @@ npm run preview  # Preview production build
 npm run lint     # Run ESLint
 ```
 
-## 🎮 How to Play
+Open [http://localhost:5173](http://localhost:5173) to play the game.
+
+## How to Play
 
 1. **Setup**: Add 2-4 players in the lobby
 2. **Start**: Click "Start Game" to begin
@@ -76,16 +77,20 @@ npm run lint     # Run ESLint
    - Follow matching rules (same value or ascending sequence)
 4. **Win**: Have the lowest hand value when timer expires
 
-## 🛠️ Tech Stack
+## Architecture
 
-- **Frontend**: React 19, TypeScript
-- **State Management**: XState 5
-- **Styling**: Tailwind CSS 3
-- **Build Tool**: Vite 7
-- **Testing**: Playwright (E2E)
-- **Linting**: ESLint with TypeScript rules
+The game implements a comprehensive state machine with:
 
-## 📁 Project Structure
+```
+LOBBY → GAME_STARTING → PLAYER_TURN ↔ WAITING_FOR_TURN → GAME_ENDING → GAME_OVER
+```
+
+- **6 States**: Lobby, Game Starting, Player Turn, Waiting for Turn, Game Ending, Game Over
+- **10+ Events**: Player actions, timer updates, game transitions
+- **Guards**: Validation logic for state transitions
+- **Actions**: Side effects and state updates
+
+## Project Structure
 
 ```
 src/
@@ -103,33 +108,22 @@ src/
 └── ...
 ```
 
-## 🎯 State Machine Design
-
-The game implements a comprehensive state machine with:
-
-- **6 States**: Lobby, Game Starting, Player Turn, Waiting for Turn, Game Ending, Game Over
-- **10+ Events**: Player actions, timer updates, game transitions
-- **Guards**: Validation logic for state transitions
-- **Actions**: Side effects and state updates
-
-## 🧪 Testing
-
-The project includes comprehensive E2E testing with Playwright:
+## Testing
 
 ```bash
-# Run tests (if configured)
-npx playwright test
+npm test              # Run unit tests
+npm run test:e2e      # Run E2E tests with Playwright
+npm run test:coverage # Run tests with coverage
 ```
 
-## 🚀 Deployment
+## Development
 
 ```bash
-# Build for production
-npm run build
-
-# The dist/ folder contains the production build
+npm run dev           # Start development server
+npm run type-check    # Type check without building
+npm run lint:fix      # Fix linting issues
 ```
 
----
+## License
 
-**Built with ❤️ using modern web technologies**
+MIT
